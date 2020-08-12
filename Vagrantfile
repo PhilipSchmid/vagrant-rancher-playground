@@ -4,6 +4,8 @@
 RKE_VERSION = "v1.1.4"
 KUBECTL_VERSION = "v1.18.0"
 HELM_VERSION = "v3.2.4"
+# Check https://rancher.com/docs/rke/latest/en/os/#installing-docker for the Rancher Docker version:
+RANCHER_DOCKER_VERSION = "18.09.2"
 CPU_CORES = 2
 MEMORY = 2048
 K8S_NODES = 3
@@ -68,7 +70,7 @@ $kubectl_installation = <<SCRIPT
 curl -LOsS https://storage.googleapis.com/kubernetes-release/release/$1/bin/linux/amd64/kubectl
 chmod +x kubectl
 mv kubectl /usr/local/bin/kubectl
-apt install bash-completion -y
+yum install bash-completion -y
 echo 'source /usr/share/bash-completion/bash_completion' >> /home/vagrant/.bashrc
 echo 'source <(kubectl completion bash)' >> /home/vagrant/.bashrc
 echo 'alias k=kubectl' >> /home/vagrant/.bashrc
@@ -78,10 +80,10 @@ SCRIPT
 
 $ansible_installation = <<SCRIPT
 
-apt update
-apt install software-properties-common -y
-apt-add-repository --yes --update ppa:ansible/ansible
-apt install ansible -y
+yum check-update
+yum install epel-release git -y
+yum check-update
+yum install ansible -y
 
 SCRIPT
 
@@ -90,12 +92,22 @@ $helm_installation = <<SCRIPT
 curl -LOsS https://get.helm.sh/helm-$1-linux-amd64.tar.gz
 tar xzf helm-$1-linux-amd64.tar.gz
 sudo mv linux-amd64/helm /usr/local/bin/helm
+rm -rf ./linux-amd64/
+rm -f helm-$1-linux-amd64.tar.gz
+
+SCRIPT
+
+$docker_installation = <<SCRIPT
+
+yum check-update
+curl https://releases.rancher.com/install-docker/$1.sh | sh
+usermod -aG docker vagrant
 
 SCRIPT
 
 Vagrant.configure("2") do |config|
     #Common setup
-    config.vm.box = "generic/ubuntu2004"
+    config.vm.box = "centos/7"
     config.vm.synced_folder ".", "/vagrant"
     config.vm.provision "prepare_ssh_access", type: "shell", inline: $prepare_ssh_access, privileged: false
     config.vm.provider :libvirt do |libvirt|
@@ -119,6 +131,7 @@ Vagrant.configure("2") do |config|
             rancher_node.vm.hostname = "rancher-node-#{i}"
             rancher_node.vm.network :forwarded_port, guest: 80, host: 80, host_ip: "127.0.0.1"
             rancher_node.vm.network :forwarded_port, guest: 443, host: 443, host_ip: "127.0.0.1"
+            rancher_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
     # Setup K8s nodes
@@ -129,6 +142,7 @@ Vagrant.configure("2") do |config|
             k8s_node.vm.network :forwarded_port, guest: 80, host: 80, host_ip: "127.0.0.1"
             k8s_node.vm.network :forwarded_port, guest: 443, host: 443, host_ip: "127.0.0.1"
             k8s_node.vm.network :forwarded_port, guest: 6443, host: 6443, host_ip: "127.0.0.1"
+            k8s_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
 end
