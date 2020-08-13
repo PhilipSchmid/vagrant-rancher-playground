@@ -1,0 +1,2 @@
+ansible_user: vagrant
+rke_ssh_user: vagrant

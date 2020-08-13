@@ -1,0 +1,24 @@
+### Special Groups for RKE & Rancher cluster ###
+# Dummy Hosts representing a cluster
+
+[custom_k8s_clusters]
+rancher_testing # Belongs to Ansible Group mycluster
+
+[rke_rancher_clusters]
+cluster_rancher # Belongs to Ansible Group rke_cluster_rancher
+
+### Hosts
+
+[rancher_k8s_nodes:children]
+rke_cluster_rancher
+testing
+
+[testing]
+k8s-node-0
+k8s-node-1
+k8s-node-2
+
+[rke_cluster_rancher]
+rancher-node-0
+rancher-node-1
+rancher-node-2

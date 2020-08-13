@@ -1,24 +1,36 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
+# Start of the configuration section
+
+# Versions
 RKE_VERSION = "v1.1.4"
 KUBECTL_VERSION = "v1.18.0"
 HELM_VERSION = "v3.2.4"
-# Check https://rancher.com/docs/rke/latest/en/os/#installing-docker for the Rancher Docker version:
-RANCHER_DOCKER_VERSION = "18.09.2"
-CPU_CORES = 2
-MEMORY = 2048
+NGINX_LB_VERSION = "1.19.1"
+KUBERNETES_VERSION = "v1.18.6-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
+RANCHER_DOCKER_VERSION = "19.03.9"          # Check https://github.com/rancher/install-docker for the newest Rancher supported Docker version
+
+# Resources
+CPU_CORES_NODES = 2
+MEMORY_NODES = 2048
+CPU_CORES_CTL_LB = 1
+MEMORY_CTL_LB = 512
+
+# Node Count
 K8S_NODES = 3
 RANCHER_NODES = 3
-CONTROL_NODE_IP = "172.20.20.5"
-# Specify only the first 3 octets
-IP_RANGE_FOR_NODES = "172.20.20"
-# Place Rancher nodes inside .10 - .19
-RANCHER_NODES_BASE_IP = "172.20.20.1"
-# Place K8s nodes inside .20 - .29
-K8S_NODES_BASE_IP = "172.20.20.2"
 
-$prepare_ssh_access = <<SCRIPT
+# Network Settings
+PRIVATE_IP_RANGE_FOR_NODES = "172.20.20"    # Specify only the first 3 octets
+CONTROL_NODE_IP = "172.20.20.5"
+LB_NODE_IP = "172.20.20.3"
+RANCHER_NODES_BASE_IP = "172.20.20.1"       # Place Rancher nodes inside .10 - .19
+K8S_NODES_BASE_IP = "172.20.20.2"           # Place K8s nodes inside .20 - .29
+
+# End of the configuration section
+
+$prepare_basic_settings = <<SCRIPT
 
 # Deploy key
 [ -f /home/vagrant/.ssh/id_rsa ] || {
@@ -44,15 +56,18 @@ sudo sed -i 's|#PubkeyAuthentication.*|PubkeyAuthentication yes|g' /etc/ssh/sshd
 sudo sed -i 's|#AuthorizedKeysFile.*|AuthorizedKeysFile	.ssh/authorized_keys|g' /etc/ssh/sshd_config
 # Populate /etc/hosts
 for x in {10..#{9+RANCHER_NODES}}; do
-  grep #{IP_RANGE_FOR_NODES}.${x} /etc/hosts &>/dev/null || {
-      echo #{IP_RANGE_FOR_NODES}.${x} rancher-node-${x##?} | sudo tee -a /etc/hosts &>/dev/null
+  grep #{PRIVATE_IP_RANGE_FOR_NODES}.${x} /etc/hosts &>/dev/null || {
+      echo #{PRIVATE_IP_RANGE_FOR_NODES}.${x} rancher-node-${x##?} | sudo tee -a /etc/hosts &>/dev/null
   }
 done
 for x in {20..#{19+K8S_NODES}}; do
-  grep #{IP_RANGE_FOR_NODES}.${x} /etc/hosts &>/dev/null || {
-      echo #{IP_RANGE_FOR_NODES}.${x} k8s-node-${x##?} | sudo tee -a /etc/hosts &>/dev/null
+  grep #{PRIVATE_IP_RANGE_FOR_NODES}.${x} /etc/hosts &>/dev/null || {
+      echo #{PRIVATE_IP_RANGE_FOR_NODES}.${x} k8s-node-${x##?} | sudo tee -a /etc/hosts &>/dev/null
   }
 done
+# Create Rancher working directory
+sudo mkdir -p /opt/rancher-setup
+sudo chown vagrant:vagrant /opt/rancher-setup
 
 SCRIPT
 
@@ -81,7 +96,7 @@ SCRIPT
 $ansible_installation = <<SCRIPT
 
 yum check-update
-yum install epel-release git -y
+yum install epel-release -y
 yum check-update
 yum install ansible -y
 
@@ -105,32 +120,78 @@ usermod -aG docker vagrant
 
 SCRIPT
 
+$various_dependency_installation = <<SCRIPT
+
+sudo yum check-update
+sudo yum install python3-pip git vim -y
+sudo -H pip3 install j2cli[yaml]
+cd /vagrant
+echo "kubernetes_version: "#{KUBERNETES_VERSION} > data.yml
+echo "rancher_nodes:" >> data.yml
+for x in {10..#{9+RANCHER_NODES}}; do
+    echo "  - "#{PRIVATE_IP_RANGE_FOR_NODES}.${x} >> data.yml
+done
+j2 cluster.yml.j2 data.yml -o /opt/rancher-setup/cluster.yml
+
+SCRIPT
+
+$nginx_installation = <<SCRIPT
+
+sudo yum check-update
+sudo yum install python3-pip -y
+sudo -H pip3 install j2cli[yaml]
+cd /vagrant
+echo "rancher_nodes:" >> data.yml
+for x in {10..#{9+RANCHER_NODES}}; do
+    echo "  - "#{PRIVATE_IP_RANGE_FOR_NODES}.${x} >> data.yml
+done
+j2 nginx.conf.j2 data.yml -o /opt/rancher-setup/nginx.conf
+sudo docker run -d --restart unless-stopped --name nginx-lb -v /opt/rancher-setup/nginx.conf:/etc/nginx/nginx.conf -p 8080:80 -p 8443:443 nginx:$1
+
+SCRIPT
+
 Vagrant.configure("2") do |config|
     #Common setup
     config.vm.box = "centos/7"
     config.vm.synced_folder ".", "/vagrant"
-    config.vm.provision "prepare_ssh_access", type: "shell", inline: $prepare_ssh_access, privileged: false
-    config.vm.provider :libvirt do |libvirt|
-        libvirt.cpus = CPU_CORES
-        libvirt.memory = MEMORY
-        libvirt.nested = false
-    end
+    config.vm.provision "prepare_basic_settings", type: "shell", inline: $prepare_basic_settings, privileged: false
     # Control node
     config.vm.define "ctl-node" do |ctl_node|
         ctl_node.vm.network :private_network, ip: "#{CONTROL_NODE_IP}"
         ctl_node.vm.hostname = "ctl-node"
+        ctl_node.vm.provider :libvirt do |libvirt|
+            libvirt.cpus = CPU_CORES_CTL_LB
+            libvirt.memory = MEMORY_CTL_LB
+        end
         ctl_node.vm.provision "rke_installation", type: "shell", inline: $rke_installation, args: [RKE_VERSION], privileged: true
         ctl_node.vm.provision "kubectl_installation", type: "shell", inline: $kubectl_installation, args: [KUBECTL_VERSION], privileged: true
         ctl_node.vm.provision "ansible_installation", type: "shell", inline: $ansible_installation, privileged: true
         ctl_node.vm.provision "helm_installation", type: "shell", inline: $helm_installation, args: [HELM_VERSION], privileged: true
+        ctl_node.vm.provision "various_dependency_installation", type: "shell", inline: $various_dependency_installation, privileged: false
+    end
+    # LB node
+    config.vm.define "lb-node" do |lb_node|
+        lb_node.vm.network :private_network, ip: "#{LB_NODE_IP}"
+        #lb_node.vm.network :public_network, ip: "#{PUBLIC_LB_NODE_IP}", bridge: "#{KVM_PUBLIC_BRIDGE_INT}", dev: "#{KVM_PUBLIC_BRIDGE_INT}"
+        lb_node.vm.hostname = "lb-node"
+        lb_node.vm.provider :libvirt do |libvirt|
+            libvirt.cpus = CPU_CORES_CTL_LB
+            libvirt.memory = MEMORY_CTL_LB
+        end
+        lb_node.vm.network :forwarded_port, guest: 8080, host: 80, host_ip: "127.0.0.1"
+        lb_node.vm.network :forwarded_port, guest: 8443, host: 443, host_ip: "127.0.0.1"
+        lb_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
+        lb_node.vm.provision "nginx_installation", type: "shell", inline: $nginx_installation, args: [NGINX_LB_VERSION], privileged: false
     end
     # Setup Rancher nodes
     (0..RANCHER_NODES-1).each do |i|
         config.vm.define "rancher-node-#{i}" do |rancher_node|
             rancher_node.vm.network :private_network, ip: "#{RANCHER_NODES_BASE_IP}#{i}"
             rancher_node.vm.hostname = "rancher-node-#{i}"
-            rancher_node.vm.network :forwarded_port, guest: 80, host: 80, host_ip: "127.0.0.1"
-            rancher_node.vm.network :forwarded_port, guest: 443, host: 443, host_ip: "127.0.0.1"
+            rancher_node.vm.provider :libvirt do |libvirt|
+                libvirt.cpus = CPU_CORES_NODES
+                libvirt.memory = MEMORY_NODES
+            end
             rancher_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
@@ -139,9 +200,10 @@ Vagrant.configure("2") do |config|
         config.vm.define "k8s-node-#{i}" do |k8s_node|
             k8s_node.vm.network :private_network, ip: "#{K8S_NODES_BASE_IP}#{i}"
             k8s_node.vm.hostname = "k8s-node-#{i}"
-            k8s_node.vm.network :forwarded_port, guest: 80, host: 80, host_ip: "127.0.0.1"
-            k8s_node.vm.network :forwarded_port, guest: 443, host: 443, host_ip: "127.0.0.1"
-            k8s_node.vm.network :forwarded_port, guest: 6443, host: 6443, host_ip: "127.0.0.1"
+            k8s_node.vm.provider :libvirt do |libvirt|
+                libvirt.cpus = CPU_CORES_NODES
+                libvirt.memory = MEMORY_NODES
+            end
             k8s_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
