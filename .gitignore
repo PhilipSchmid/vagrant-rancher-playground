@@ -1,3 +1,6 @@
-.vagrant
+*/.vagrant
 id_rsa*
+manual_setup/id_rsa*
 ERROR.md
+manual_setup/ca*
+manual_setup/tls*

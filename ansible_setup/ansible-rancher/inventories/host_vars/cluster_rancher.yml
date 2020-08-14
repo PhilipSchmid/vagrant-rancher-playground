@@ -4,8 +4,8 @@ rancher_failover_ip: []
   #   master: rancher01
 rancher_failover_ipv6: []
 
-certmanager_enabled: false
+certmanager_enabled: true
 rancher_letsencrypt_email: my@email.com # Only needed when certmanager_enabled is true
 
-rancher_hostname: "127.0.0.1.xip.puzzle.ch" # Make sure this is set
+rancher_hostname: "192.168.121.254.xip.puzzle.ch" # Make sure this is set
 rancher_admin_password: "my-top-secret-password-here" # local admin user account

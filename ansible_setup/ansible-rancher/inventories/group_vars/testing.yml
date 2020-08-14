@@ -1,0 +1,7 @@
+k8s_roles:
+- controlplane
+- etcd
+- worker
+k8s_labels:
+- name: environment
+  value: vagrant
