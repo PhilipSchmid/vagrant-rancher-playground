@@ -17,6 +17,26 @@ k8s-node-2                running (libvirt)
 
 Nevertheless, of course you can customize the `rancher-node-*`/`k8s-node-*?` VM count directly via the regarding variable inside the `manual_setup/Vagrantfile` or `ansible_setup/Vagrantfile` files.
 
+## Minimum Recommended Available Resources
+In order to run a full minimal HA environment (`K8S_NODES` and `RANCHER_NODES` set to `3`) on your machine, we recommend a system with at least 6 physical CPU cores (12 with Hyper-Threading) and 20GB memory.
+
+If you want to run this setup on your local development machine or any other less powerful system, it's recommended to scale the node count of the `K8S_NODES` and `RANCHER_NODES` to `1`. In this case its also recommended to set `MEMORY_RANCHER_NODES` and `MEMORY_K8S_NODES` to `4096`.
+
+Relevant configuration settings (see inside the `Vagrantfile`s):
+```
+# Resources
+CPU_CORES_RANCHER_NODES = 2
+MEMORY_RANCHER_NODES = 4096
+CPU_CORES_K8S_NODES = 2
+MEMORY_K8S_NODES = 4096
+CPU_CORES_CTL_LB = 1
+MEMORY_CTL_LB = 512
+
+# Node Count
+K8S_NODES = 1
+RANCHER_NODES = 1
+```
+
 ## Prerequisites for both Setups
 
 ### Install Vagrant & Libvirt Plugin
@@ -43,6 +63,7 @@ cp ../id_rsa* .
 ```
 3. Spin up the Vagrant VMs:
 ```bash
+vagrant box update
 vagrant up --provision --no-parallel
 ```
 4. To verify the VM setup, access the `ctl-node` VM using `vagrant ssh ctl-node`.

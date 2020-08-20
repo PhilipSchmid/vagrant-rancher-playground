@@ -15,10 +15,10 @@ testing
 
 [testing]
 k8s-node-0
-k8s-node-1
-k8s-node-2
+#k8s-node-1
+#k8s-node-2
 
 [rke_cluster_rancher]
 rancher-node-0
-rancher-node-1
-rancher-node-2
+#rancher-node-1
+#rancher-node-2

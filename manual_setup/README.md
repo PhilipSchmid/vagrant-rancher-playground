@@ -18,14 +18,14 @@ source ~/.bashrc
 kubectl get nodes
 NAME                         STATUS   ROLES                      AGE   VERSION
 172.20.20.10.xip.puzzle.ch   Ready    controlplane,etcd,worker   46s   v1.17.9
-172.20.20.11.xip.puzzle.ch   Ready    controlplane,etcd,worker   46s   v1.17.9
-172.20.20.12.xip.puzzle.ch   Ready    controlplane,etcd,worker   46s   v1.17.9
 ```
 
 ## Rancher Installation (via Helm Chart)
 Source: https://rancher.com/docs/rancher/v2.x/en/installation/k8s-install/helm-rancher/
 
-### Cert-Manager
+### Cert-Manager (optional)
+This Cert-Manager setup is **not** required if you configure Rancher to use a self-generated TLS certificate (`ingress.tls.source=secret`). See https://rancher.com/docs/rancher/v2.x/en/installation/k8s-install/helm-rancher/#5-install-cert-manager for more details.
+
 ```bash
 kubectl apply --validate=false -f https://github.com/jetstack/cert-manager/releases/download/v0.16.0/cert-manager.crds.yaml
 kubectl create namespace cert-manager
@@ -45,7 +45,6 @@ kubectl get pods --namespace cert-manager
 **Important:** 
 - Replace `192.168.121.254.xip.puzzle.ch` with the actual public IP/domainname from the `lb-node` VM (the same as specified in `PUBLIC_LB_NODE_IP` inside `Vagrantfile`).
 - Remove `--set privateCA=true` from the `helm upgrade` Rancher installation command if your certificate is officially signed.
-- 
 
 Generate a self-signed CA and server certificate (optional):
 ```

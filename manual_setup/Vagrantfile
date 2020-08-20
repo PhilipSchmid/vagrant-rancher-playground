@@ -3,25 +3,28 @@
 
 # Start of the configuration section
 
+# General
+VM_IMAGE = "generic/centos7"
+
 # Versions
 RKE_VERSION = "v1.1.4"
 KUBECTL_VERSION = "v1.18.0"
 HELM_VERSION = "v3.2.4"
 NGINX_LB_VERSION = "1.19.1"
-KUBERNETES_VERSION = "v1.17.9-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
+KUBERNETES_VERSION = "v1.18.6-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
 RANCHER_DOCKER_VERSION = "19.03.9"          # Check https://github.com/rancher/install-docker for the newest Rancher supported Docker version
 
 # Resources
 CPU_CORES_RANCHER_NODES = 2
-MEMORY_RANCHER_NODES = 2048
+MEMORY_RANCHER_NODES = 4096
 CPU_CORES_K8S_NODES = 2
-MEMORY_K8S_NODES = 2048
+MEMORY_K8S_NODES = 4096
 CPU_CORES_CTL_LB = 1
 MEMORY_CTL_LB = 512
 
 # Node Count
-K8S_NODES = 3
-RANCHER_NODES = 3
+K8S_NODES = 1
+RANCHER_NODES = 1
 
 # Network Settings
 PRIVATE_IP_RANGE_FOR_NODES = "172.20.20"    # Specify only the first 3 octets
@@ -74,12 +77,18 @@ sudo mkdir -p /opt/rancher-setup
 sudo chown vagrant:vagrant /opt/rancher-setup
 # Disable swap
 sudo swapoff -a
-sudo sed -i '/\/swapfile.*/d' /etc/fstab
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 # Install basic & lab tools
 sudo rpm --import http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
 sudo yum -y install epel-release
-sudo yum update -y
+sudo yum check-update
 sudo yum install htop vim wireshark -y
+# Set SELinux to permissive mode
+sudo setenforce 0
+sudo sed -i --follow-symlinks 's/^SELINUX=.*/SELINUX=permissive/g' /etc/sysconfig/selinux
+# Disable Firewall
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
 
 SCRIPT
 
@@ -165,7 +174,7 @@ SCRIPT
 
 Vagrant.configure("2") do |config|
     #Common setup
-    config.vm.box = "centos/7"
+    config.vm.box = "#{VM_IMAGE}"
     config.vm.synced_folder ".", "/vagrant"
     config.vm.provision "prepare_basic_settings", type: "shell", inline: $prepare_basic_settings, privileged: false
     # Control node

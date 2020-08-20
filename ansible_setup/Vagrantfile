@@ -3,25 +3,24 @@
 
 # Start of the configuration section
 
+# General
+VM_IMAGE = "generic/centos7"
+
 # Versions
-RKE_VERSION = "v1.1.4"
-KUBECTL_VERSION = "v1.18.0"
-HELM_VERSION = "v3.2.4"
-NGINX_LB_VERSION = "1.19.1"
-KUBERNETES_VERSION = "v1.17.9-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
-RANCHER_DOCKER_VERSION = "19.03.9"          # Check https://github.com/rancher/install-docker for the newest Rancher supported Docker version
+# Versions are managed by the Ansible playbook. 
+# See https://github.com/puzzle/ansible-rancher for more information.
 
 # Resources
 CPU_CORES_RANCHER_NODES = 2
-MEMORY_RANCHER_NODES = 2048
+MEMORY_RANCHER_NODES = 4096
 CPU_CORES_K8S_NODES = 2
-MEMORY_K8S_NODES = 2048
-CPU_CORES_CTL_LB = 1
-MEMORY_CTL_LB = 512
+MEMORY_K8S_NODES = 4096
+CPU_CORES_CTL = 1
+MEMORY_CTL = 512
 
 # Node Count
-K8S_NODES = 3
-RANCHER_NODES = 3
+K8S_NODES = 1
+RANCHER_NODES = 1
 
 # Network Settings
 PRIVATE_IP_RANGE_FOR_NODES = "172.20.20"    # Specify only the first 3 octets
@@ -74,34 +73,18 @@ sudo mkdir -p /opt/rancher-setup
 sudo chown vagrant:vagrant /opt/rancher-setup
 # Disable swap
 sudo swapoff -a
-sudo sed -i '/\/swapfile.*/d' /etc/fstab
+sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 # Install basic & lab tools
 sudo rpm --import http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
 sudo yum -y install epel-release
-sudo yum update -y
+sudo yum check-update
 sudo yum install htop vim wireshark -y
-
-SCRIPT
-
-$rke_installation = <<SCRIPT
-
-curl -LOsS https://github.com/rancher/rke/releases/download/$1/rke_linux-amd64
-mv rke_linux-amd64 rke
-chmod +x rke
-mv rke /usr/local/bin/rke
-
-SCRIPT
-
-$kubectl_installation = <<SCRIPT
-
-curl -LOsS https://storage.googleapis.com/kubernetes-release/release/$1/bin/linux/amd64/kubectl
-chmod +x kubectl
-mv kubectl /usr/local/bin/kubectl
-yum install bash-completion -y
-echo 'source /usr/share/bash-completion/bash_completion' >> /home/vagrant/.bashrc
-echo 'source <(kubectl completion bash)' >> /home/vagrant/.bashrc
-echo 'alias k=kubectl' >> /home/vagrant/.bashrc
-echo 'complete -F __start_kubectl k' >> /home/vagrant/.bashrc
+# Set SELinux to permissive mode
+sudo setenforce 0
+sudo sed -i --follow-symlinks 's/^SELINUX=.*/SELINUX=permissive/g' /etc/sysconfig/selinux
+# Disable Firewall
+sudo systemctl stop firewalld
+sudo systemctl disable firewalld
 
 SCRIPT
 
@@ -110,62 +93,14 @@ $ansible_installation = <<SCRIPT
 yum check-update
 yum install epel-release -y
 yum check-update
-yum install ansible -y
-
-SCRIPT
-
-$helm_installation = <<SCRIPT
-
-curl -LOsS https://get.helm.sh/helm-$1-linux-amd64.tar.gz
-tar xzf helm-$1-linux-amd64.tar.gz
-sudo mv linux-amd64/helm /usr/local/bin/helm
-rm -rf ./linux-amd64/
-rm -f helm-$1-linux-amd64.tar.gz
-
-SCRIPT
-
-$docker_installation = <<SCRIPT
-
-yum check-update
-curl https://releases.rancher.com/install-docker/$1.sh | sh
-usermod -aG docker vagrant
-systemctl enable docker --now
-
-SCRIPT
-
-$various_dependency_installation = <<SCRIPT
-
-sudo yum check-update
-sudo yum install python3-pip git vim -y
-sudo -H pip3 install j2cli[yaml]
-cd /vagrant
-echo "kubernetes_version: "#{KUBERNETES_VERSION} > data.yml
-echo "rancher_nodes:" >> data.yml
-for x in {10..#{9+RANCHER_NODES}}; do
-    echo "  - "#{PRIVATE_IP_RANGE_FOR_NODES}.${x} >> data.yml
-done
-j2 cluster.yml.j2 data.yml -o /opt/rancher-setup/cluster.yml
-
-SCRIPT
-
-$nginx_installation = <<SCRIPT
-
-sudo yum check-update
-sudo yum install python3-pip -y
-sudo -H pip3 install j2cli[yaml]
-cd /vagrant
-echo "rancher_nodes:" >> data.yml
-for x in {10..#{9+RANCHER_NODES}}; do
-    echo "  - "#{PRIVATE_IP_RANGE_FOR_NODES}.${x} >> data.yml
-done
-j2 nginx.conf.j2 data.yml -o /opt/rancher-setup/nginx.conf
-sudo docker run -d --restart unless-stopped --name nginx-lb -v /opt/rancher-setup/nginx.conf:/etc/nginx/nginx.conf -p 80:80 -p 443:443 nginx:$1
+yum install ansible git python3-pip libselinux-python3 -y
+sudo -H pip3 install --upgrade pip
 
 SCRIPT
 
 Vagrant.configure("2") do |config|
     #Common setup
-    config.vm.box = "centos/7"
+    config.vm.box = "#{VM_IMAGE}"
     config.vm.synced_folder ".", "/vagrant"
     config.vm.provision "prepare_basic_settings", type: "shell", inline: $prepare_basic_settings, privileged: false
     # Control node
@@ -173,29 +108,10 @@ Vagrant.configure("2") do |config|
         ctl_node.vm.network :private_network, ip: "#{CONTROL_NODE_IP}"
         ctl_node.vm.hostname = "ctl-node"
         ctl_node.vm.provider :libvirt do |libvirt|
-            libvirt.cpus = CPU_CORES_CTL_LB
-            libvirt.memory = MEMORY_CTL_LB
+            libvirt.cpus = CPU_CORES_CTL
+            libvirt.memory = MEMORY_CTL
         end
-        ctl_node.vm.provision "rke_installation", type: "shell", inline: $rke_installation, args: [RKE_VERSION], privileged: true
-        ctl_node.vm.provision "kubectl_installation", type: "shell", inline: $kubectl_installation, args: [KUBECTL_VERSION], privileged: true
         ctl_node.vm.provision "ansible_installation", type: "shell", inline: $ansible_installation, privileged: true
-        ctl_node.vm.provision "helm_installation", type: "shell", inline: $helm_installation, args: [HELM_VERSION], privileged: true
-        ctl_node.vm.provision "various_dependency_installation", type: "shell", inline: $various_dependency_installation, privileged: false
-    end
-    # LB node
-    config.vm.define "lb-node" do |lb_node|
-        lb_node.vm.network :private_network, ip: "#{LB_NODE_IP}"
-        lb_node.vm.network :public_network, ip: "#{PUBLIC_LB_NODE_IP}", bridge: "#{KVM_PUBLIC_BRIDGE_INT}", dev: "#{KVM_PUBLIC_BRIDGE_INT}"
-        lb_node.vm.hostname = "lb-node"
-        lb_node.vm.provider :libvirt do |libvirt|
-            libvirt.cpus = CPU_CORES_CTL_LB
-            libvirt.memory = MEMORY_CTL_LB
-        end
-        # Uncomment the following two lines if you want your Rancher setup available from the hosts' LAN:
-        #lb_node.vm.network :forwarded_port, guest: 80, host: 80
-        #lb_node.vm.network :forwarded_port, guest: 443, host: 443
-        lb_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
-        lb_node.vm.provision "nginx_installation", type: "shell", inline: $nginx_installation, args: [NGINX_LB_VERSION], privileged: false
     end
     # Setup Rancher nodes
     (0..RANCHER_NODES-1).each do |i|
@@ -206,7 +122,6 @@ Vagrant.configure("2") do |config|
                 libvirt.cpus = CPU_CORES_RANCHER_NODES
                 libvirt.memory = MEMORY_RANCHER_NODES
             end
-            rancher_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
     # Setup K8s nodes
@@ -218,7 +133,6 @@ Vagrant.configure("2") do |config|
                 libvirt.cpus = CPU_CORES_K8S_NODES
                 libvirt.memory = MEMORY_K8S_NODES
             end
-            k8s_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
 end

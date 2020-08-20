@@ -1,11 +1,19 @@
-rancher_failover_ip: []
-  # - vip: 192.168.1.1
-  #   router_id: 50
-  #   master: rancher01
-rancher_failover_ipv6: []
+rancher_failover_ip:
+- vip: 192.168.121.254
+  router_id: 50
+  master: rancher-node-0
+  password: "my-top-secret-password-here"
 
-certmanager_enabled: true
+rke_ssh_user: vagrant
+rke_ssh_agent_auth: false
+
+certmanager_enabled: false
 rancher_letsencrypt_email: my@email.com # Only needed when certmanager_enabled is true
 
 rancher_hostname: "192.168.121.254.xip.puzzle.ch" # Make sure this is set
 rancher_admin_password: "my-top-secret-password-here" # local admin user account
+
+rke_rancher_tls_crt: ""
+rke_rancher_tls_key: ""
+rke_rancher_tls_cacerts: ""
+rke_rancher_tls_self_signed: true
