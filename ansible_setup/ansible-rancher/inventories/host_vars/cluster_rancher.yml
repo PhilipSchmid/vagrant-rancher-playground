@@ -1,3 +1,4 @@
+keepalived_image_version: "puzzle/keepalived:2.0.20"
 rancher_failover_ip:
 - vip: 192.168.121.254
   router_id: 50
