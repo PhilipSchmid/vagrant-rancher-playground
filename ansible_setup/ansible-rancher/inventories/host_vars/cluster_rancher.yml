@@ -1,9 +1,14 @@
-keepalived_image_version: "puzzle/keepalived:2.0.20"
-rancher_failover_ip:
-- vip: 192.168.121.254
-  router_id: 50
-  master: rancher-node-0
-  password: "my-top-secret-password-here"
+keepalived_enabled: true
+keepalived_private_only: true
+keepalived_ipv4_only: true
+keepalived_setup_env: "local"
+keepalived_image: "puzzle/keepalived:2.0.20"
+keepalived_private_failover_track_interface_ip: eth0
+keepalived_private_failover_ip:
+  - vip: "192.168.121.254"
+    router_id: 1
+    master: rancher-node-0
+    password: my-top-secret-password1-here
 
 rke_ssh_user: vagrant
 rke_ssh_agent_auth: false
