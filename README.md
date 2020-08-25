@@ -1,4 +1,4 @@
-# Vagrant Rancher Test Environment (KVM-based)
+# Vagrant Rancher Test Environment
 This Vagrant environment should help you to deploy a Rancher Setup playground within a few minutes. There is a manual and an automated setup. Both setups have their own `Vagrantfile` but both will spin up the following VMs:
 
 ```bash
@@ -38,14 +38,18 @@ RANCHER_NODES = 1
 ```
 
 ## Prerequisites for both Setups
+Choose between libvirt (KVM) or VirtualBox.
 
-### Install Vagrant & Libvirt Plugin
+### Install Vagrant & Libvirt Plugin (optional)
 ```bash
 wget https://releases.hashicorp.com/vagrant/2.2.9/vagrant_2.2.9_x86_64.deb
 sudo dpkg -i vagrant_2.2.9_x86_64.deb
 sudo apt install -y libvirt-dev libvirt-bin qemu-utils qemu-kvm
 sudo vagrant plugin install vagrant-libvirt
 ```
+
+### VirtualBox
+Install Virtualbox according to https://www.virtualbox.org/wiki/Linux_Downloads.
 
 ### SSH Keypair for passwordless Access (VM to VM)
 Generate the SSH key pair:
@@ -61,13 +65,16 @@ ssh-keygen -t rsa -f id_rsa -b 4096 -C 'vagrant@rancher-lab' -q -N ''
 ```bash
 cp ../id_rsa* .
 ```
-3. Spin up the Vagrant VMs:
+3.  Choose your Vagrant provider inside the `Vagrantfile` (variable `PROVIDER`).
+4. Spin up the Vagrant VMs:
 ```bash
 vagrant box update
-vagrant up --provision --no-parallel
+vagrant up --provision --no-parallel --provider=virtualbox
+# or
+vagrant up --provision --no-parallel --provider=libvirt
 ```
-4. To verify the VM setup, access the `ctl-node` VM using `vagrant ssh ctl-node`.
-5. Test if passwordless SSH access is working:
+5. To verify the VM setup, access the `ctl-node` VM using `vagrant ssh ctl-node`.
+6. Test if passwordless SSH access is working:
 ```bash
 $ ssh rancher-node-0
 $ ssh k8s-node-0

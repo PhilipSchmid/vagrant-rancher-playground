@@ -5,6 +5,7 @@
 
 # General
 VM_IMAGE = "generic/centos7"
+PROVIDER = "virtualbox"
 
 # Versions
 RKE_VERSION = "v1.1.4"
@@ -181,9 +182,9 @@ Vagrant.configure("2") do |config|
     config.vm.define "ctl-node" do |ctl_node|
         ctl_node.vm.network :private_network, ip: "#{CONTROL_NODE_IP}"
         ctl_node.vm.hostname = "ctl-node"
-        ctl_node.vm.provider :libvirt do |libvirt|
-            libvirt.cpus = CPU_CORES_CTL_LB
-            libvirt.memory = MEMORY_CTL_LB
+        ctl_node.vm.provider :"#{PROVIDER}" do |box|
+            box.cpus = CPU_CORES_CTL_LB
+            box.memory = MEMORY_CTL_LB
         end
         ctl_node.vm.provision "rke_installation", type: "shell", inline: $rke_installation, args: [RKE_VERSION], privileged: true
         ctl_node.vm.provision "kubectl_installation", type: "shell", inline: $kubectl_installation, args: [KUBECTL_VERSION], privileged: true
@@ -196,9 +197,9 @@ Vagrant.configure("2") do |config|
         lb_node.vm.network :private_network, ip: "#{LB_NODE_IP}"
         lb_node.vm.network :public_network, ip: "#{PUBLIC_LB_NODE_IP}", bridge: "#{KVM_PUBLIC_BRIDGE_INT}", dev: "#{KVM_PUBLIC_BRIDGE_INT}"
         lb_node.vm.hostname = "lb-node"
-        lb_node.vm.provider :libvirt do |libvirt|
-            libvirt.cpus = CPU_CORES_CTL_LB
-            libvirt.memory = MEMORY_CTL_LB
+        lb_node.vm.provider :"#{PROVIDER}" do |box|
+            box.cpus = CPU_CORES_CTL_LB
+            box.memory = MEMORY_CTL_LB
         end
         # Uncomment the following two lines if you want your Rancher setup available from the hosts' LAN:
         #lb_node.vm.network :forwarded_port, guest: 80, host: 80
@@ -211,9 +212,9 @@ Vagrant.configure("2") do |config|
         config.vm.define "rancher-node-#{i}" do |rancher_node|
             rancher_node.vm.network :private_network, ip: "#{RANCHER_NODES_BASE_IP}#{i}"
             rancher_node.vm.hostname = "rancher-node-#{i}"
-            rancher_node.vm.provider :libvirt do |libvirt|
-                libvirt.cpus = CPU_CORES_RANCHER_NODES
-                libvirt.memory = MEMORY_RANCHER_NODES
+            rancher_node.vm.provider :"#{PROVIDER}" do |box|
+                box.cpus = CPU_CORES_RANCHER_NODES
+                box.memory = MEMORY_RANCHER_NODES
             end
             rancher_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
@@ -223,9 +224,9 @@ Vagrant.configure("2") do |config|
         config.vm.define "k8s-node-#{i}" do |k8s_node|
             k8s_node.vm.network :private_network, ip: "#{K8S_NODES_BASE_IP}#{i}"
             k8s_node.vm.hostname = "k8s-node-#{i}"
-            k8s_node.vm.provider :libvirt do |libvirt|
-                libvirt.cpus = CPU_CORES_K8S_NODES
-                libvirt.memory = MEMORY_K8S_NODES
+            k8s_node.vm.provider :"#{PROVIDER}" do |box|
+                box.cpus = CPU_CORES_K8S_NODES
+                box.memory = MEMORY_K8S_NODES
             end
             k8s_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
