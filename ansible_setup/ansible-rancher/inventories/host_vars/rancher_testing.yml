@@ -1,5 +1,19 @@
 custom_k8s_cluster_api_key: "" # Create a new token on your Rancher Control Plane
-custom_k8s_cluster_rancher_host: "192.168.121.254.xip.puzzle.ch" # URL of your Rancher control Plane
+custom_k8s_cluster_rancher_host: "172.20.20.254.xip.puzzle.ch" # URL of your Rancher control Plane
 custom_k8s_cluster_verify_ssl: no
 custom_k8s_cluster_self_signed_certificate: true
-custom_k8s_cluster_agent_version: "v2.4.5"
+
+keepalived_enabled: true
+keepalived_private_only: true
+keepalived_ipv4_only: true
+keepalived_setup_env: "local"
+keepalived_image: "puzzle/keepalived:2.0.20"
+keepalived_private_failover_track_interface_ip: eth1
+keepalived_private_failover_ip:
+  - vip: "172.20.20.253"
+    router_id: 2
+    master: k8s-node-0
+    password: my-top-secret-password2-here
+keepalived_private_ipv4_node_group: "{{ groups[custom_k8s_cluster_group_inventory_name + '_master'] }}"
+keepalived_public_ipv4_node_group: "{{ groups[custom_k8s_cluster_group_inventory_name + '_ingress'] }}"
+keepalived_public_ipv6_node_group: "{{ groups[custom_k8s_cluster_group_inventory_name + '_ingress'] }}"

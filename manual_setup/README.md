@@ -17,7 +17,7 @@ echo "export KUBECONFIG='/opt/rancher-setup/kube_config_cluster.yml'" >> /home/v
 source ~/.bashrc
 kubectl get nodes
 NAME                         STATUS   ROLES                      AGE   VERSION
-172.20.20.10.xip.puzzle.ch   Ready    controlplane,etcd,worker   46s   v1.17.9
+192.168.121.10.xip.puzzle.ch   Ready    controlplane,etcd,worker   46s   v1.17.9
 ```
 
 ## Rancher Installation (via Helm Chart)
@@ -43,7 +43,7 @@ kubectl get pods --namespace cert-manager
 
 ### Rancher
 **Important:** 
-- Replace `192.168.121.254.xip.puzzle.ch` with the actual public IP/domainname from the `lb-node` VM (the same as specified in `PUBLIC_LB_NODE_IP` inside `Vagrantfile`).
+- Replace `192.168.121.254.xip.puzzle.ch` with the actual public IP/domainname from the `lb-node` VM (the same as specified in `PUBLIC_LB_NODE_IP` inside `Vagrantfile`). For libvirt the default public bridge IP subnet probably is `192.168.121.0/24`. So if you choose to run it on libvirt you could use `192.168.121.254`.
 - Remove `--set privateCA=true` from the `helm upgrade` Rancher installation command if your certificate is officially signed.
 
 Generate a self-signed CA and server certificate (optional):

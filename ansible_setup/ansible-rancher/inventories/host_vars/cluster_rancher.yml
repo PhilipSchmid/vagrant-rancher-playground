@@ -1,25 +1,29 @@
+rke_ssh_user: vagrant
+rke_ssh_agent_auth: false
+
+# "rke_network_interface" needs to be "eth1" for VirtualBox VMs and for KVM VMs "eth0"
+rke_network_interface: eth1
+rke_cluster_group_inventory_name: "{{ 'rke_' + inventory_hostname }}"
+
+rancher_certmanager_enabled: false
+rancher_letsencrypt_email: my@email.com # Only needed when certmanager_enabled is true
+
+rancher_hostname: "172.20.20.254.xip.puzzle.ch" # Make sure this is set
+rancher_admin_password: "my-top-secret-password-here" # local admin user account
+
+rancher_tls_crt: ""
+rancher_tls_key: ""
+rancher_tls_cacerts: ""
+rancher_tls_self_signed: true
+
 keepalived_enabled: true
 keepalived_private_only: true
 keepalived_ipv4_only: true
 keepalived_setup_env: "local"
 keepalived_image: "puzzle/keepalived:2.0.20"
-keepalived_private_failover_track_interface_ip: eth0
+keepalived_private_failover_track_interface_ip: eth1
 keepalived_private_failover_ip:
-  - vip: "192.168.121.254"
+  - vip: "172.20.20.254"
     router_id: 1
     master: rancher-node-0
     password: my-top-secret-password1-here
-
-rke_ssh_user: vagrant
-rke_ssh_agent_auth: false
-
-certmanager_enabled: false
-rancher_letsencrypt_email: my@email.com # Only needed when certmanager_enabled is true
-
-rancher_hostname: "192.168.121.254.xip.puzzle.ch" # Make sure this is set
-rancher_admin_password: "my-top-secret-password-here" # local admin user account
-
-rke_rancher_tls_crt: ""
-rke_rancher_tls_key: ""
-rke_rancher_tls_cacerts: ""
-rke_rancher_tls_self_signed: true

@@ -26,9 +26,6 @@ RANCHER_NODES = 1
 # Network Settings
 PRIVATE_IP_RANGE_FOR_NODES = "172.20.20"    # Specify only the first 3 octets
 CONTROL_NODE_IP = "172.20.20.5"
-LB_NODE_IP = "172.20.20.3"
-PUBLIC_LB_NODE_IP = "192.168.121.254"
-KVM_PUBLIC_BRIDGE_INT = "virbr2"            # Specify the vagrant VMs public network GW interface from the host
 RANCHER_NODES_BASE_IP = "172.20.20.1"       # Place Rancher nodes inside .10 - .19
 K8S_NODES_BASE_IP = "172.20.20.2"           # Place K8s nodes inside .20 - .29
 
