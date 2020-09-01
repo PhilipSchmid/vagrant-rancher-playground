@@ -2,6 +2,8 @@ custom_k8s_cluster_api_key: "" # Create a new token on your Rancher Control Plan
 custom_k8s_cluster_rancher_host: "172.20.20.254.xip.puzzle.ch" # URL of your Rancher control Plane
 custom_k8s_cluster_verify_ssl: no
 custom_k8s_cluster_self_signed_certificate: true
+custom_k8s_cluster_ingress_node_internal_iface: eth1
+custom_k8s_cluster_use_fqdn_nodename: false
 
 keepalived_enabled: true
 keepalived_private_only: true

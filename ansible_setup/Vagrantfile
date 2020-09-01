@@ -15,7 +15,7 @@ PROVIDER = "virtualbox"
 CPU_CORES_RANCHER_NODES = 2
 MEMORY_RANCHER_NODES = 4096
 CPU_CORES_K8S_NODES = 2
-MEMORY_K8S_NODES = 4096
+MEMORY_K8S_NODES = 2048
 CPU_CORES_CTL = 1
 MEMORY_CTL = 512
 
@@ -76,7 +76,7 @@ sudo sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 sudo rpm --import http://download.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-7
 sudo yum -y install epel-release
 sudo yum check-update
-sudo yum install htop vim wireshark -y
+sudo yum install htop vim -y
 # Set SELinux to permissive mode
 sudo setenforce 0
 sudo sed -i --follow-symlinks 's/^SELINUX=.*/SELINUX=permissive/g' /etc/sysconfig/selinux
