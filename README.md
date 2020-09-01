@@ -20,7 +20,7 @@ Nevertheless, of course you can customize the `rancher-node-*`/`k8s-node-*?` VM 
 ## Minimum Recommended Available Resources
 In order to run a full minimal HA environment (`K8S_NODES` and `RANCHER_NODES` set to `3`) on your machine, we recommend a system with at least 6 physical CPU cores (12 with Hyper-Threading) and 20GB memory.
 
-If you want to run this setup on your local development machine or any other less powerful system, it's recommended to scale the node count of the `K8S_NODES` and `RANCHER_NODES` to `1`. In this case its also recommended to set `MEMORY_RANCHER_NODES` and `MEMORY_K8S_NODES` to `4096`.
+If you want to run this setup on your local development machine or any other less powerful system, it's recommended to scale the node count of the `K8S_NODES` and `RANCHER_NODES` to `1`. In this case its also recommended to set `MEMORY_RANCHER_NODES` to `4096` and `MEMORY_K8S_NODES` to at least `2048` (depending on the workload you are going to deploy).
 
 Relevant configuration settings (see inside the `Vagrantfile`s):
 ```
@@ -28,7 +28,7 @@ Relevant configuration settings (see inside the `Vagrantfile`s):
 CPU_CORES_RANCHER_NODES = 2
 MEMORY_RANCHER_NODES = 4096
 CPU_CORES_K8S_NODES = 2
-MEMORY_K8S_NODES = 4096
+MEMORY_K8S_NODES = 2048
 CPU_CORES_CTL_LB = 1
 MEMORY_CTL_LB = 512
 
@@ -42,8 +42,8 @@ Choose between libvirt (KVM) or VirtualBox.
 
 ### Install Vagrant & Libvirt Plugin (optional)
 ```bash
-wget https://releases.hashicorp.com/vagrant/2.2.9/vagrant_2.2.9_x86_64.deb
-sudo dpkg -i vagrant_2.2.9_x86_64.deb
+wget https://releases.hashicorp.com/vagrant/2.2.10/vagrant_2.2.10_linux_amd64.zip
+sudo dpkg -i vagrant_2.2.10_linux_amd64.zip
 sudo apt install -y libvirt-dev libvirt-bin qemu-utils qemu-kvm
 sudo vagrant plugin install vagrant-libvirt
 ```
