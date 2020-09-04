@@ -1,5 +1,5 @@
 # Vagrant Rancher Test Environment (KVM-based)
-This Vagrant environment should help you to automatically deploy a Rancher Setup playground within a few minutes using the [Ansible Playbook from Puzzle ITC](https://github.com/puzzle/ansible-rancher).
+This Vagrant environment should help you to automatically deploy an (optionally HA) testing/development Rancher Setup playground within a few minutes using the [Ansible Playbook from Puzzle ITC](https://github.com/puzzle/ansible-rancher).
 
 **Make sure you already completed the steps documented in [../README.md](../README.md).**
 

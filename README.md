@@ -1,21 +1,26 @@
 # Vagrant Rancher Test Environment
-This Vagrant environment should help you to deploy a Rancher Setup playground within a few minutes. There is a manual and an automated setup. Both setups have their own `Vagrantfile` but both will spin up the following VMs:
+This Vagrant environment should help you to automatically deploy an (optionally HA) testing/development Rancher Setup playground within a few minutes. There is a manual and an automated setup. Both setups have their own `Vagrantfile` but both will spin up the following VMs:
 
 ```bash
 $ vagrant status
 Current machine states:
 
 ctl-node                  running (libvirt)
-lb-node                   running (libvirt)
+lb-node                   running (libvirt) (only manual setup)
 rancher-node-0            running (libvirt)
-rancher-node-1            running (libvirt)
-rancher-node-2            running (libvirt)
+rancher-node-1            running (libvirt) (when RANCHER_NODES >= 2)
+rancher-node-2            running (libvirt) (when RANCHER_NODES >= 3)
 k8s-node-0                running (libvirt)
-k8s-node-1                running (libvirt)
-k8s-node-2                running (libvirt)
+k8s-node-1                running (libvirt) (when K8S_NODES >= 2)
+k8s-node-2                running (libvirt) (when K8S_NODES >= 3)
 ```
 
 Nevertheless, of course you can customize the `rancher-node-*`/`k8s-node-*?` VM count directly via the regarding variable inside the `manual_setup/Vagrantfile` or `ansible_setup/Vagrantfile` files.
+
+Please note the following hint regarding the load balancing:
+
+- The **manual setup** uses a separate nginx load balancer VM (`lb-node`) to make the Rancher web UI highly available.
+- The **automated setup** uses the [rancher_keepalived](https://github.com/puzzle/ansible-rancher/tree/master/roles/rancher_keepalived) Ansible role from [puzzle/ansible-rancher](https://github.com/puzzle/ansible-rancher) to make the Rancher web UI highly available via a vIP.
 
 ## Minimum Recommended Available Resources
 In order to run a full minimal HA environment (`K8S_NODES` and `RANCHER_NODES` set to `3`) on your machine, we recommend a system with at least 6 physical CPU cores (12 with Hyper-Threading) and 20GB memory.

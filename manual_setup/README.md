@@ -1,5 +1,5 @@
 # Vagrant Rancher Test Environment (KVM-based)
-This Vagrant environment should help you to manually deploy a Rancher Setup playground within a few minutes. 
+This Vagrant environment should help you to manually deploy an (optionally HA) testing/development Rancher Setup playground within a few minutes
 
 **Make sure you already completed the steps documented in [../README.md](../README.md).**
 

@@ -4,6 +4,7 @@ custom_k8s_cluster_verify_ssl: no
 custom_k8s_cluster_self_signed_certificate: true
 custom_k8s_cluster_ingress_node_internal_iface: eth1
 custom_k8s_cluster_use_fqdn_nodename: false
+custom_k8s_clusters_ingress_provider: nginx
 
 keepalived_enabled: true
 keepalived_private_only: true
