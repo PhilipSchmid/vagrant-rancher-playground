@@ -1,5 +1,5 @@
 # Vagrant Rancher Test Environment
-This Vagrant environment should help you to automatically deploy an (optionally HA) testing/development Rancher Setup playground within a few minutes. There is a manual and an automated setup. Both setups have their own `Vagrantfile` but both will spin up the following VMs:
+This Vagrant environment should help you to automatically deploy an (optionally HA) testing/development Rancher Setup playground within a few minutes. There is a manual and two automated setups. All three setups have their own `Vagrantfile` but all will spin up the following VMs:
 
 ```bash
 $ vagrant status
@@ -15,12 +15,12 @@ k8s-node-1                running (libvirt) (when K8S_NODES >= 2)
 k8s-node-2                running (libvirt) (when K8S_NODES >= 3)
 ```
 
-Nevertheless, of course you can customize the `rancher-node-*`/`k8s-node-*?` VM count directly via the regarding variable inside the `manual_setup/Vagrantfile` or `ansible_setup/Vagrantfile` files.
+Nevertheless, of course you can customize the `rancher-node-*`/`k8s-node-*?` VM count directly via the regarding variable inside the `manual_setup/Vagrantfile`, `ansible_setup/Vagrantfile` or `terraform_setup/Vagrantfile` files.
 
 Please note the following hint regarding the load balancing:
 
 - The **manual setup** uses a separate nginx load balancer VM (`lb-node`) to make the Rancher web UI highly available.
-- The **automated setup** uses the [rancher_keepalived](https://github.com/puzzle/ansible-rancher/tree/master/roles/rancher_keepalived) Ansible role from [puzzle/ansible-rancher](https://github.com/puzzle/ansible-rancher) to make the Rancher web UI highly available via a vIP.
+- The **automated setups** use the [rancher_keepalived](https://github.com/puzzle/ansible-rancher/tree/master/roles/rancher_keepalived) Ansible role from [puzzle/ansible-rancher](https://github.com/puzzle/ansible-rancher) or the Terraform rancher_keepalived resource definitions from [puzzle/terraform-rancher](https://github.com/puzzle/terraform-rancher) the to make the Rancher web UI highly available via a vIP.
 
 ## Minimum Recommended Available Resources
 In order to run a full minimal HA environment (`K8S_NODES` and `RANCHER_NODES` set to `3`) on your machine, we recommend a system with at least 6 physical CPU cores (12 with Hyper-Threading) and 20GB memory.
@@ -65,7 +65,7 @@ ssh-keygen -t rsa -f id_rsa -b 4096 -C 'vagrant@rancher-lab' -q -N ''
 ## Getting Started
 
 ### VM Setup
-1. `cd` into the `manual_setup/` or `ansible_setup/` sub directory depending on your wished installation method.
+1. `cd` into the `manual_setup/`, `ansible_setup/` or `terraform_setup` sub directory depending on your wished installation method.
 2. Copy the SSH key pair into the sub directory:
 ```bash
 cp ../id_rsa* .
@@ -89,10 +89,11 @@ $ ssh k8s-node-0
 In order to continue with the Rancher setup navigate to the regarding `README.md`.
 
 - **Manual** Rancher cluster setup: [manual_setup/README.md](manual_setup/README.md)
-- **Automated** Rancher cluster setup using Ansible: [ansible_setup/README.md](ansible_setup/README.md)
+- **Automated** Rancher cluster setup using **Ansible**: [ansible_setup/README.md](ansible_setup/README.md)
+- **Automated** Rancher cluster setup using **Terraform**: [terraform_setup/README.md](terraform_setup/README.md)
 
 ## Teardown
-Run the following command inside the `./manual_setup/` or `./ansible_setup/` sub directory to shutdown and delete the Vagrant environment:
+Run the following command inside the `./manual_setup/`, `./ansible_setup/` or `./terraform_setup` sub directory to shutdown and delete the Vagrant environment:
 ```bash
 vagrant destroy -f
 ```

@@ -1,0 +1,8 @@
+nodes:
+{%- for ip in rancher_nodes %}
+  - address: {{ ip }}.xip.puzzle.ch
+    user: vagrant
+    role: [controlplane,worker,etcd]
+{%- endfor %}
+
+kubernetes_version: "{{ kubernetes_version }}"
