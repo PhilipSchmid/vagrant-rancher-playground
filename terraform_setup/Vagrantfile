@@ -11,7 +11,6 @@ PROVIDER = "virtualbox"
 TERRAFORM_VERSION = "0.13.2"
 KUBECTL_VERSION = "v1.18.0"
 KUBERNETES_VERSION = "v1.18.6-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
-RANCHER_DOCKER_VERSION = "19.03.9"          # Check https://github.com/rancher/install-docker for the newest Rancher supported Docker version
 
 # Resources
 CPU_CORES_RANCHER_NODES = 2
@@ -109,15 +108,6 @@ j2 cluster.yml.j2 data.yml -o /opt/rancher-setup/cluster.yml
 
 SCRIPT
 
-$docker_installation = <<SCRIPT
-
-yum check-update
-curl https://releases.rancher.com/install-docker/$1.sh | sh
-usermod -aG docker vagrant
-systemctl enable docker --now
-
-SCRIPT
-
 $kubectl_installation = <<SCRIPT
 
 curl -LOsS https://storage.googleapis.com/kubernetes-release/release/$1/bin/linux/amd64/kubectl
@@ -157,7 +147,6 @@ Vagrant.configure("2") do |config|
                 box.cpus = CPU_CORES_RANCHER_NODES
                 box.memory = MEMORY_RANCHER_NODES
             end
-            rancher_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
     # Setup K8s nodes
@@ -169,7 +158,6 @@ Vagrant.configure("2") do |config|
                 box.cpus = CPU_CORES_K8S_NODES
                 box.memory = MEMORY_K8S_NODES
             end
-            k8s_node.vm.provision "docker_installation", type: "shell", inline: $docker_installation, args: [RANCHER_DOCKER_VERSION], privileged: true
         end
     end
 end
