@@ -43,12 +43,12 @@ RANCHER_NODES = 1
 ```
 
 ## Prerequisites for both Setups
-Choose between libvirt (KVM) or VirtualBox.
+Choose between libvirt (KVM) **OR** VirtualBox.
 
-### Install Vagrant & Libvirt Plugin (optional)
+### Install Vagrant & Libvirt Plugin
 ```bash
-wget https://releases.hashicorp.com/vagrant/2.2.10/vagrant_2.2.10_linux_amd64.zip
-sudo dpkg -i vagrant_2.2.10_linux_amd64.zip
+wget https://releases.hashicorp.com/vagrant/2.2.14/vagrant_2.2.14_x86_64.deb
+sudo dpkg -i vagrant_2.2.14_x86_64.deb
 sudo apt install -y libvirt-dev libvirt-bin qemu-utils qemu-kvm
 sudo vagrant plugin install vagrant-libvirt
 ```

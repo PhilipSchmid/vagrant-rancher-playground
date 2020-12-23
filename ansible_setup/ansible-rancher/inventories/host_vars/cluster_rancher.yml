@@ -5,16 +5,12 @@ rke_ssh_agent_auth: false
 rke_network_interface: eth1
 rke_cluster_group_inventory_name: "{{ 'rke_' + inventory_hostname }}"
 
-rancher_certmanager_enabled: false
-rancher_letsencrypt_email: my@email.com # Only needed when certmanager_enabled is true
-
 rancher_hostname: "172.20.20.254.xip.puzzle.ch" # Make sure this is set
 rancher_admin_password: "my-top-secret-password-here" # local admin user account
 
-rancher_tls_crt: ""
-rancher_tls_key: ""
-rancher_tls_cacerts: ""
-rancher_tls_self_signed: true
+rancher_certmanager_enabled: true
+rancher_generated_self_signed_certificates: true
+rancher_bring_your_own_certificates: false
 
 keepalived_enabled: true
 keepalived_private_only: true

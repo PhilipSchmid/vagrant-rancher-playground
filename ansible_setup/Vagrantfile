@@ -5,7 +5,8 @@
 
 # General
 VM_IMAGE = "generic/centos7"
-PROVIDER = "virtualbox"
+PROVIDER = "libvirt"
+#PROVIDER = "virtualbox"
 
 # Versions
 # Versions are managed by the Ansible playbook. 

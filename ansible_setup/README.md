@@ -12,6 +12,8 @@ cd /opt/rancher-setup
 
 ## TLS Certificate
 
+The TLS certificate must only be generated when you do not let Rancher generate it's own self-signed certificates (method 1) or use Let's Encrypt generated ones (method 2). Basically only when you set `rancher_bring_your_own_certificate` to `true`. See https://github.com/puzzle/ansible-rancher/blob/b6456b1afc826f9f698a79112476963ab14c9aa6/roles/rke_rancher_clusters/defaults/main.yml#L55-L61 for more details.
+
 **Important:** 
 - Replace `172.20.20.254.xip.puzzle.ch` with the actual public vIP/domainname you would like to use for the keepalived VRRP. For libvirt the default public bridge IP subnet probably is `192.168.121.0/24`. So if you choose to run it on libvirt you could use `192.168.121.254` instead of `172.20.20.254`.
 
@@ -48,7 +50,7 @@ pipenv install
 cp -rf /vagrant/ansible-rancher/* .
 ```
 
-3. Set/Replace some configuration values:
+3. Set/Replace some configuration values (optional, only required if own certificates are used):
 ```bash
 sed -i ./inventories/host_vars/cluster_rancher.yml -e 's/rancher_certmanager_enabled.*/rancher_certmanager_enabled: false/g'
 cat ../tls.crt | base64 -w 0 | xargs --replace=INSERTED -- sed -i ./inventories/host_vars/cluster_rancher.yml -e 's/rancher_tls_crt.*/rancher_tls_crt: "INSERTED"/g'
