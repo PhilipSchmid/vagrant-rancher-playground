@@ -9,8 +9,8 @@ PROVIDER = "virtualbox"
 
 # Versions
 TERRAFORM_VERSION = "0.13.2"
-KUBECTL_VERSION = "v1.18.0"
-KUBERNETES_VERSION = "v1.18.8-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
+KUBECTL_VERSION = "v1.20.1"
+KUBERNETES_VERSION = "v1.19.4-rancher1-1"   # Check https://rancher.com/support-maintenance-terms/all-supported-versions/rancher-v2.4.5/ to see the supported K8s versions by Rancher
 
 # Resources
 CPU_CORES_RANCHER_NODES = 2

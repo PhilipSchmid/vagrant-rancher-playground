@@ -2,7 +2,7 @@ rke_ssh_user: vagrant
 rke_ssh_agent_auth: false
 
 # "rke_network_interface" needs to be "eth1" for VirtualBox VMs and for KVM VMs "eth0"
-rke_network_interface: eth1
+rke_network_interface: eth0
 rke_cluster_group_inventory_name: "{{ 'rke_' + inventory_hostname }}"
 
 rancher_hostname: "172.20.20.254.xip.puzzle.ch" # Make sure this is set
